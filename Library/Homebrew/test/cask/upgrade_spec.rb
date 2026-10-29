@@ -72,6 +72,16 @@ RSpec.describe Cask::Upgrade, :cask do
 
       expect(environment.read).to be_empty
     end
+
+    it "reopens apps hidden when asked" do
+      old_cask = Cask::CaskLoader.load(cask_path("with-uninstall-quit"))
+      old_cask.artifacts.grep(Cask::Artifact::Uninstall).fetch(0)
+              .bundle_ids_to_reopen << "my.fancy.package.app"
+
+      expect(upgrade).to receive(:system).with("open", "-g", "-j", "-b", "my.fancy.package.app", any_args)
+
+      upgrade.reopen_apps_after_upgrade(old_cask, local_caffeine, hidden: true)
+    end
   end
 
   it "warns and excludes casks with no version for the current platform" do

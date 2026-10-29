@@ -782,6 +782,11 @@ module Homebrew
         description: "A space-separated list of casks. Homebrew will act as " \
                      "if `--greedy` was passed when upgrading any cask on this list.",
       },
+      HOMEBREW_UPGRADE_REOPEN_CASKS_HIDDEN:      {
+        description: "If set, `brew upgrade` will reopen applications it quit during cask upgrades " \
+                     "hidden, without taking focus.",
+        boolean:     true,
+      },
       HOMEBREW_USE_INTERNAL_API:                 {
         description: "If set, fetch formula and cask data from Homebrew's internal API. This is now the default.",
         boolean:     :set,

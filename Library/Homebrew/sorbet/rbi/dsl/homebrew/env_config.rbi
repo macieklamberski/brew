@@ -473,6 +473,9 @@ module Homebrew::EnvConfig
     def upgrade_greedy_casks; end
 
     sig { returns(T::Boolean) }
+    def upgrade_reopen_casks_hidden?; end
+
+    sig { returns(T::Boolean) }
     def use_internal_api?; end
 
     sig { returns(T::Boolean) }

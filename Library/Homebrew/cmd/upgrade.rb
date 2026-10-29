@@ -139,6 +139,10 @@ module Homebrew
             description: "Prevent running cask applications from being quit during upgrade.",
             env:         :no_upgrade_quit_casks,
           }],
+          [:switch, "--reopen-hidden", {
+            description: "Reopen cask applications quit during upgrade hidden, without taking focus.",
+            env:         :upgrade_reopen_casks_hidden,
+          }],
           [:switch, "-g", "--greedy", {
             description: "Also include casks with `version :latest` and `auto_updates true` casks " \
                          "that would otherwise be skipped.",
@@ -915,6 +919,7 @@ module Homebrew
           require_sha:                args.cask_require_sha?,
           skip_cask_deps:             args.skip_cask_deps?,
           quit:                       !args.no_quit?,
+          reopen_hidden:              args.reopen_hidden?,
           verbose:                    args.verbose?,
           quiet:,
           skip_prefetch:,

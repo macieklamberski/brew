@@ -132,6 +132,9 @@ class Homebrew::Cmd::UpgradeCmd::Args < Homebrew::CLI::Args
   def qlplugindir; end
 
   sig { returns(T::Boolean) }
+  def reopen_hidden?; end
+
+  sig { returns(T::Boolean) }
   def require_sha?; end
 
   sig { returns(T::Boolean) }

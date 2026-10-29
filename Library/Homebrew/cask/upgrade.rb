@@ -123,6 +123,7 @@ module Cask
         binaries:                   T.nilable(T::Boolean),
         require_sha:                T.nilable(T::Boolean),
         quit:                       T::Boolean,
+        reopen_hidden:              T::Boolean,
         skip_prefetch:              T::Boolean,
         show_upgrade_summary:       T::Boolean,
         download_queue:             T.nilable(Homebrew::DownloadQueue),
@@ -149,6 +150,7 @@ module Cask
       binaries: nil,
       require_sha: nil,
       quit: true,
+      reopen_hidden: false,
       skip_prefetch: false,
       show_upgrade_summary: true,
       download_queue: nil,
@@ -292,7 +294,7 @@ module Cask
         upgrade_cask(
           old_cask, new_cask,
           binaries:, force:, skip_cask_deps:, verbose:,
-          require_sha:, quit:, download_queue:, new_cask_installer:
+          require_sha:, quit:, reopen_hidden:, download_queue:, new_cask_installer:
         )
         summary_upgrades&.push(cask_upgrades.fetch(index))
         upgraded_casks&.push(new_cask)
@@ -341,8 +343,8 @@ module Cask
       :skip
     end
 
-    sig { params(old_cask: Cask, new_cask: Cask).void }
-    def self.reopen_apps_after_upgrade(old_cask, new_cask)
+    sig { params(old_cask: Cask, new_cask: Cask, hidden: T::Boolean).void }
+    def self.reopen_apps_after_upgrade(old_cask, new_cask, hidden: false)
       bundle_ids = old_cask.artifacts
                            .grep(Artifact::Uninstall)
                            .flat_map(&:bundle_ids_to_reopen)
@@ -361,10 +363,12 @@ module Cask
 
       ohai "Reopening #{bundle_ids.count} #{::Utils.pluralize("application",
                                                               bundle_ids.count)} closed during upgrade:"
+      # `-g` keeps the app out of the foreground and `-j` launches it hidden.
+      open_args = hidden ? ["-g", "-j"] : []
       bundle_ids.each do |bundle_id|
         puts bundle_id
         # Let Launch Services supply the user's environment.
-        system("open", "-b", bundle_id, unsetenv_others: true)
+        system("open", *open_args, "-b", bundle_id, unsetenv_others: true)
       end
     end
     private_class_method :reopen_apps_after_upgrade
@@ -380,13 +384,14 @@ module Cask
         skip_cask_deps:     T.nilable(T::Boolean),
         verbose:            T.nilable(T::Boolean),
         download_queue:     Homebrew::DownloadQueue,
+        reopen_hidden:      T::Boolean,
         new_cask_installer: T.nilable(Installer),
       ).void
     }
     def self.upgrade_cask(
       old_cask, new_cask,
       binaries:, force:, require_sha:, quit:, skip_cask_deps:, verbose:, download_queue:,
-      new_cask_installer: nil
+      reopen_hidden: false, new_cask_installer: nil
     )
       completed = false
       start_time = Time.now
@@ -497,7 +502,7 @@ module Cask
         # If successful, wipe the old cask from staging.
         old_cask_installer.finalize_upgrade
 
-        reopen_apps_after_upgrade(old_cask, new_cask) if quit
+        reopen_apps_after_upgrade(old_cask, new_cask, hidden: reopen_hidden) if quit
       rescue => e
         begin
           new_cask_installer.uninstall_artifacts(successor: old_cask, quit:) if new_artifacts_installed
